@@ -1,0 +1,23 @@
+pip install requests beautifulsoup4
+import requests
+from bs4 import BeautifulSoup
+
+# URL веб-сайта, который нужно сканировать
+url = 'https://example.com'  # Замените на нужный вам сайт
+
+# Выполнение GET-запроса
+response = requests.get(url)
+
+# Проверка успешности запроса
+if response.status_code == 200:
+    # Парсинг HTML контента
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    # Поиск заголовков статей (например, <h2> заголовки)
+    headers = soup.find_all('h2')
+
+    # Вывод заголовков статей
+    for header in headers:
+        print(header.get_text())
+else:
+    print(f'Ошибка при запросе: {response.status_code}')
