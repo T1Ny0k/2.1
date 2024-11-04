@@ -1,0 +1,66 @@
+pip install pandas nltk matplotlib seaborn wordcloud
+import nltk
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.sentiment import SentimentIntensityAnalyzer
+from wordcloud import WordCloud
+
+# Загрузка ресурсов NLTK
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('vader_lexicon')
+
+# 1. Загрузка текстовых данных
+# Замените 'text_data.csv' на путь к вашему CSV-файлу с текстом
+# Предполагается, что в файле есть столбец 'text' с текстовыми данными
+data = pd.read_csv('text_data.csv')
+
+# 2. Предварительная обработка текста
+def preprocess_text(text):
+    # Токенизация
+    tokens = word_tokenize(text.lower())
+    # Удаление стоп-слов
+    tokens = [word for word in tokens if word.isalnum() and word not in stopwords.words('english')]
+    return tokens
+
+data['tokens'] = data['text'].apply(preprocess_text)
+
+# 3. Анализ частоты слов
+all_words = [word for tokens in data['tokens'] for word in tokens]
+word_freq = pd.Series(all_words).value_counts()
+
+# 4. Анализ настроения
+sia = SentimentIntensityAnalyzer()
+data['sentiment_score'] = data['text'].apply(lambda x: sia.polarity_scores(x)['compound'])
+data['sentiment'] = data['sentiment_score'].apply(lambda x: 'positive' if x > 0 else 'negative')
+
+# 5. Визуализация результатов
+# 5.1. График частоты наиболее распространенных слов
+plt.figure(figsize=(10, 6))
+sns.barplot(x=word_freq.head(10).index, y=word_freq.head(10).values)
+plt.title('Частота наиболее распространенных слов')
+plt.xticks(rotation=45)
+plt.show()
+
+# 5.2. Создание облака слов
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(all_words))
+plt.figure(figsize=(10, 6))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.title('Облако слов')
+plt.show()
+
+# 5.3. Распределение настроений
+plt.figure(figsize=(10, 6))
+sns.countplot(data=data, x='sentiment', palette='Set2')
+plt.title('Распределение настроений')
+plt.xlabel('Настроение')
+plt.ylabel('Количество')
+plt.show()
+
+# 6. Вывод статистики
+print("\nСтатистика по отзывам:")
+print(data['sentiment'].value_counts(normalize=True))
