@@ -1,0 +1,31 @@
+# Перед этим нам надо подготовить файл text_data.csv с колонками text и label.
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Загружаем данные
+data = pd.read_csv('text_data.csv')  # Файл должен содержать текст и метки классов
+X = data['text']  # Тексты
+y = data['label']  # Метки классов
+
+# Разделяем данные на обучающую и тестовую выборки
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Векторизация текстов
+vectorizer = CountVectorizer()
+X_train_vec = vectorizer.fit_transform(X_train)
+X_test_vec = vectorizer.transform(X_test)
+
+# Создаем и обучаем классификатор
+classifier = MultinomialNB()
+classifier.fit(X_train_vec, y_train)
+
+# Прогнозируем и оцениваем модель
+y_pred = classifier.predict(X_test_vec)
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f'Accuracy: {accuracy:.2f}')
+print(classification_report(y_test, y_pred))
